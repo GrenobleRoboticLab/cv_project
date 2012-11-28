@@ -1,0 +1,10 @@
+<launch>
+    <include file="$(find openni_launch)/launch/openni.launch" />
+
+    <node pkg="face_tracker" type="ft_launcher" name="FaceTracker" output="screen" respawn="false" >
+        <param name="/sub_topic_name" type="str" value="/camera/rgb/image_rect_color" />
+        <param name="/pub_topic_name" type="str" value="face_tracked_frame" />
+        <param name="/face_cascade_name" type="str" value="$(find face_tracker)/haarcascade_frontalface_alt.xml" />
+        <param name="/eyes_cascade_name" type="str" value="$(find face_tracker)/haarcascade_eye_tree_eyeglasses.xml" />
+    </node>
+</launch>

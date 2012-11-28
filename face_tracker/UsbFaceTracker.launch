@@ -1,0 +1,9 @@
+<launch>
+    <node pkg="usb_cam" type="usb_cam_node" name="usb_cam" output="screen" respawn="false" />
+    <node pkg="face_tracker" type="ft_launcher" name="FaceTracker" output="screen" respawn="false" >
+        <param name="/sub_topic_name" type="str" value="/usb_cam/image_raw" />
+        <param name="/pub_topic_name" type="str" value="face_tracked_frame" />
+        <param name="/face_cascade_name" type="str" value="$(find face_tracker)/haarcascade_frontalface_alt.xml" />
+        <param name="/eyes_cascade_name" type="str" value="$(find face_tracker)/haarcascade_eye_tree_eyeglasses.xml" />
+    </node>
+</launch>

@@ -1,0 +1,10 @@
+<stack>
+    <description brief="Code about computer vision" >
+        Supinfo Grenoble Robotic Laboratory stack about computer vision and point cloud.
+    </description>
+    <author></author>
+    <license>BSD</license>
+    <review status="unreviewed" notes="" />
+    <url>https://github.com/GrenobleRoboticLab</url>
+    <depend stack="vision_opencv" />
+</stack>
