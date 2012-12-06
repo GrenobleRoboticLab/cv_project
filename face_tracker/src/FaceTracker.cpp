@@ -100,6 +100,32 @@ Status Face::DrawOn(cv::Mat & mat, const cv::Scalar & eyeColor, const cv::Scalar
     return ret;
 }
 
+bool Face::GetHeadCenter(cv::Point & point) const
+{
+    bool bRet = false;
+
+    if (m_bHasHead)
+    {
+        point = m_HeadCenter;
+        bRet = true;
+    }
+
+    return bRet;
+}
+
+bool Face::GetHeadRadius(double & dRadius) const
+{
+    bool bRet = false;
+    
+    if (m_bHasHead)
+    {
+        dRadius = m_dXHeadRadius;
+	bRet = true;
+    }
+
+    return bRet;
+}
+
 /* ---------------------------------------------------------------------------------------- */
 
 FaceTracker::FaceTracker(const cv::String & sFaceCascadeFile, const cv::String & sEyesCascadeFile)

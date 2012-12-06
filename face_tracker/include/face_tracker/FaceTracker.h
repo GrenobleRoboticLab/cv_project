@@ -40,6 +40,8 @@ public:
 
     Status       DrawOn(cv::Mat & mat, const cv::Scalar & colorEye, const cv::Scalar & colorHead);
 
+    bool         GetHeadCenter(cv::Point & point) const;
+    bool         GetHeadRadius(double & dRadius) const;
 private:
     cv::Point    m_HeadCenter,
                  m_LEyeCenter,

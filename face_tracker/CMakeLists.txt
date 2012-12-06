@@ -22,9 +22,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_gensrv()
 
 #common commands for building c++ executables and libraries
-rosbuild_add_library(${PROJECT_NAME} src/FaceTracker.cpp src/NodeFaceTracker.cpp)
+rosbuild_add_library(${PROJECT_NAME} src/FaceTracker.cpp src/NodeFaceTracker.cpp src/NodeNxtFaceTracker.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
-rosbuild_add_executable(ft_launcher src/FaceTracker_launch.cpp)
+#rosbuild_add_executable(ft_launcher src/FaceTracker_launch.cpp)
+rosbuild_add_executable(ft_launcher src/NxtFaceTracker_launch.cpp)
 target_link_libraries(ft_launcher ${PROJECT_NAME})
