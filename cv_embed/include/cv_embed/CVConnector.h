@@ -13,7 +13,7 @@
 
 #include "CVImageAnalyzer.h"
 
-// classe de test, ne pas s'y fier
+// classe de test, ne pas s'en servir
 class CVConnector
 {
 public:

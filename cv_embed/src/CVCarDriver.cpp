@@ -39,26 +39,32 @@ void CVCarDriver::imageCallback(const sensor_msgs::ImageConstPtr &imagePtr)
         return;
     }
 
+    /* assigne l'image que l'on vient de recevoir à notre Analyzer */
     m_Analyzer.setImageOrg(cvBImage.image);
+    /* cherche des chemins possible dans l'image */
     findWays();
 
+    /* DEBUG */
     for (uint i = 0; i < m_ObjectsFound.size(); i++)
         cv::rectangle(cvBImage.image, m_ObjectsFound[i], cv::Scalar(255, 0, 0), 2);
 
     for (uint i = 0; i < m_LinesFound.size(); i++)
         cv::line(cvBImage.image, cv::Point(m_LinesFound.at(i)[0], m_LinesFound.at(i)[1]), cv::Point(m_LinesFound.at(i)[2], m_LinesFound.at(i)[3]), cv::Scalar(0, 255, 0), 2);
 
-    cv::namedWindow("mon nom");
-    cv::imshow("mon nom", cvBImage.image);
+    cv::namedWindow("visual");
+    cv::imshow("visual", cvBImage.image);
     cv::waitKey(5);
+    /* FIN DEBUG */
 
+    /* génère un ordre à partir des chemins trouvés */
     computeOrder();
+    /* envoie l'ordre sur le topic */
     sendOrder();
-    m_LinesFound.clear();
 }
 
 bool CVCarDriver::sendOrder()
 {
+    /* si la voiture est prête, on envoie l'ordre */
     bool bRet = m_bCarReady;
 
     if (m_bCarReady)
@@ -77,36 +83,47 @@ void CVCarDriver::carReadyCallback(const std_msgs::Empty::ConstPtr &msgPtr)
 
 void CVCarDriver::findWays()
 {
+    /* regarde si la méthode findObject réussit, sinon on essaye de trouver les objets à partir des angles de la méthode goodFeaturesToTrack */
     if (!findObjects())
         findObjectsFromFeatures();
+    /* récupère les lignes */
     findLines();
+    /* construit les chemins en fonction des information précedemment perçue */
     findWaysFromObjects();
     findWaysFromLines();
 }
 
 void CVCarDriver::findWaysFromObjects()
 {
+    /* teste si le tiers inférieur de l'image est encombré */
     const bool      bFront  = freeSpaceAvailable();
     const uint      maxX    = m_Analyzer.getImgWidth();
     uint            current = 0;
 
+    /* un chemin correspond à un ensemble de segments depuis la position de la voiture jusqu'au bord supérieur de l'image */
     cv::Point       wayTested(0, 0);
+    /* part du principe que la position de la voiture correspond au point centrale de la dernière ligne de l'image */
     const cv::Point carPos(m_Analyzer.getEdge(VE_BOT, HE_CENTER));
 
     WAY             tmpWay;
 
     cv::Vec2i       eq1;
 
+    /* pour chaque colone de notre image */
     for (;current <= maxX; current++)
     {
         bool    bOccupiedWay    = false;
         wayTested.x             = current;
         eq1                     = getLineEq<int>(carPos, wayTested);
 
+        /* pour chaque objets trouvé */
         for (uint i = 0; i < m_ObjectsFound.size(); i++)
         {
             cv::Point   intersectPoint;
             cv::Rect*   pRect = &m_ObjectsFound[i];
+
+            /* on va chercher si notre segment passe par un des cotés du rectangle courant */
+            /* si oui, le segment est encombré alors on passe au segment suivant, sinon on continue jusqu'a avoir testé tous les objets */
             if (getIntersectStraight(eq1, getLineEq(pRect->x, pRect->y, pRect->x + pRect->width, pRect->y), intersectPoint))
             {
                 if (inRange(intersectPoint.x, pRect->x, pRect->x + pRect->width) && inRange(intersectPoint.y, pRect->y, pRect->y + pRect->height))
@@ -141,16 +158,19 @@ void CVCarDriver::findWaysFromObjects()
             }
         }
 
+        /* si notre segment est encombré et que nous avons un chemin en construction, on copie le chemin dans les chemins possible et on vide le chemin temporaire */
         if (bOccupiedWay && tmpWay.size())
         {
             m_AvailableWays.push_back(tmpWay);
             tmpWay.clear();
         }
+        // sinon on ajoute notre segment dans le chemin courrant */
         else
         {
             cv::Vec2i v;
             v[0]        = current;
 
+            /* si le tiers inférieur de l'image est encombré, on se dirige vers l'arrière, sinon ver l'avant */
             if (bFront)
                 v[1]    = 1;
             else
@@ -160,6 +180,7 @@ void CVCarDriver::findWaysFromObjects()
         }
     }
 
+    /* quand nous avons fini notre parcour, on ajoute le dernier chemin trouvé (si il existe) */
     if (tmpWay.size())
         m_AvailableWays.push_back(tmpWay);
 }
@@ -171,6 +192,7 @@ void CVCarDriver::findWaysFromLines()
 
 bool CVCarDriver::freeSpaceAvailable()
 {
+    /* on teste si tous les coins des lignes et objets trouvé dans l'image ne sont pas dans le tiers inférieur de l'image */
     bool bRet = true;
     cv::Rect    freeRect(0, (m_Analyzer.getImgHeight() * 2 / 3), m_Analyzer.getImgWidth(), m_Analyzer.getImgHeight());
 
@@ -208,12 +230,15 @@ void CVCarDriver::computeOrder()
     WAY*    pBestWay = NULL;
     double  avr;
 
+    /* il est possible qu'auncun chemin n'est été trouvé :'( */
     if (!m_AvailableWays.size())
     {
         std::cout << "No way available" << std::endl;
     }
+    /* sinon :) */
     else
     {
+        /* pour chaque chemin nous allons récupérer le chemin qui a la plus grande largeur */
         for (uint i = 0; i < m_AvailableWays.size(); i++)
         {
             if (pBestWay)
@@ -225,29 +250,35 @@ void CVCarDriver::computeOrder()
                 pBestWay = &m_AvailableWays[i];
         }
 
+        /* on récupère la position moyenne du chemin (axe des ordonnées) */
         avr = average(*pBestWay, 0);
 
+        /* si le chemin va vers l'avant */
         if (pBestWay->at(0)[1] > 0)
         {
             std::cout << "Go";
+            /* la moyenne se situe dans le tiers gauche de l'image */
             if(avr <= (m_Analyzer.getImgWidth() / 3))
                 std::cout << " to the left" << std::endl;
+            /* la moyenne se situe dans le tiers central de l'image */
             else if (avr <= ((2 * m_Analyzer.getImgWidth()) / 3))
                 std::cout << " ahead" << std::endl;
+            /* la moyenne se situe dans le tiers droit de l'image */
             else if (avr <= m_Analyzer.getImgWidth())
                 std::cout << " to the right" << std::endl;
         }
+        /* sinon */
         else if (pBestWay->at(0)[1] < 0)
         {
+            /* on fait comme vers l'avant sauf qu'on oriente les roues de la voiture dans la direction opposée. */
             std::cout << "Back";
             if(avr <= (m_Analyzer.getImgWidth() / 3))
-                std::cout << " to the left" << std::endl;
+                std::cout << " to the right" << std::endl;
             else if (avr <= ((2 * m_Analyzer.getImgWidth()) / 3))
                 std::cout << " ahead" << std::endl;
             else if (avr <= m_Analyzer.getImgWidth())
-                std::cout << " to the right" << std::endl;
+                std::cout << " to the left" << std::endl;
         }
-
     }
 
     m_AvailableWays.clear();
@@ -265,7 +296,7 @@ bool CVCarDriver::findObjects()
     {
         cv::Rect    boundedRect;
         computeArea(contours[i], boundedRect);
-        if(boundedRect.area() > 1000 && boundedRect.area() < (426*480))
+        if(boundedRect.area() > 1000 && boundedRect.area() < (m_Analyzer.getImgWidth() * m_Analyzer.getImgHeight() * 9 / 10))
             m_ObjectsFound.push_back(boundedRect);
     }
 
@@ -279,6 +310,8 @@ bool CVCarDriver::findLines()
 {
     bool bRet = false;
     LINES  vTmpLines;
+
+    m_LinesFound.clear();
     m_Analyzer.houghLines(vTmpLines);
 
     for (uint i = 0; i < vTmpLines.size(); i++)
