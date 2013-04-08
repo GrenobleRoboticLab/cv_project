@@ -1,0 +1,12 @@
+/home/xavier/ros_labsws/cv_project/face_tracker/include/face_tracker/FaceTracker.h
+/home/xavier/ros_labsws/cv_project/face_tracker/include/face_tracker/LRG_Tools.h
+/home/xavier/ros_labsws/cv_project/face_tracker/include/face_tracker/NodeFaceTracker.h
+/home/xavier/ros_labsws/cv_project/face_tracker/include/face_tracker/NodeNxtFaceTracker.h
+/home/xavier/ros_labsws/cv_project/face_tracker/src/FaceTracker.cpp
+/home/xavier/ros_labsws/cv_project/face_tracker/src/FaceTracker_launch.cpp
+/home/xavier/ros_labsws/cv_project/face_tracker/src/NodeFaceTracker.cpp
+/home/xavier/ros_labsws/cv_project/face_tracker/src/NodeNxtFaceTracker.cpp
+/home/xavier/ros_labsws/cv_project/face_tracker/src/NxtFaceTracker_launch.cpp
+/home/xavier/ros_labsws/cv_project/face_tracker/CMakeLists.txt
+/home/xavier/ros_labsws/cv_project/face_tracker/haarcascade_eye_tree_eyeglasses.xml
+/home/xavier/ros_labsws/cv_project/face_tracker/haarcascade_frontalface_alt.xml

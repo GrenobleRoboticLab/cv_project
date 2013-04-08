@@ -1,0 +1,11 @@
+/home/xavier/ros_labsws/cv_project/cv_embed/CMakeLists.txt
+/home/xavier/ros_labsws/cv_project/cv_embed/mainpage.dox
+/home/xavier/ros_labsws/cv_project/cv_embed/manifest.xml
+include/cv_embed/CVConnector.h
+src/CVConnector.cpp
+include/cv_embed/CVMathHelper.h
+include/cv_embed/CVImageAnalyzer.h
+src/CVImageAnalyzer.cpp
+include/cv_embed/CVCarDriver.h
+src/CVCarDriver.cpp
+src/CVCarDriver_node.cpp
